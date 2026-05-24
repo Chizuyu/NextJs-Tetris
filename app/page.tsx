@@ -3,7 +3,7 @@ import { useTetris } from "@/hooks/useTetris";
 import { TETROMINOS, COLS } from "@/constants";
 import { THEMES, ThemeKey } from "../themes";
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, px } from "framer-motion";
 
 function AnimatedScore({ value }: { value: number }) {
   return (
@@ -126,10 +126,9 @@ export default function Home() {
 
         {/* KOLOM TENGAH: Board Utama */}
         <section
-          className={`relative grid border-[4px] lg:border-[8px] shadow-2xl rounded-xl overflow-hidden order-1 lg:order-2 justify-self-center ${theme.board}`}
+          className={`relative grid border-[4px] lg:border-[8px] shadow-2xl rounded-xl overflow-hidden order-1 lg:order-2 justify-self-center ${theme.board} w-[210px] lg:w-[320px]`}
           style={{
             gridTemplateColumns: `repeat(${COLS}, 1fr)`,
-            width: "min(55vw, 220px)",
             aspectRatio: "1 / 2",
           }}
         >
