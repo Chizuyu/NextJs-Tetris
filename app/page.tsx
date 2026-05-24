@@ -2,7 +2,7 @@
 import { useTetris } from "@/hooks/useTetris";
 import { TETROMINOS, COLS } from "@/constants";
 import { THEMES, ThemeKey } from "../themes";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, px } from "framer-motion";
 
 function AnimatedScore({ value }: { value: number }) {
@@ -22,13 +22,45 @@ function AnimatedScore({ value }: { value: number }) {
 export default function Home() {
   const [currentTheme, setCurrentTheme] = useState<ThemeKey>("midnight");
   const theme = THEMES[currentTheme];
-  const { grid, activePiece, nextPiece, move, rotate, hardDrop, gameOver, score, startGame, isPlaying, getGhostPos } = useTetris();
-
+  const { grid, activePiece, nextPiece, move, rotate, hardDrop, gameOver, score, startGame, isPlaying, getGhostPos, isPaused, togglePause } = useTetris();
   const ghostY = getGhostPos();
+
+  const [isMuted, setIsMuted] = useState(false);
+  const bgmRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    bgmRef.current = new Audio("/sounds/bgm.mp3");
+    bgmRef.current.loop = true;
+    bgmRef.current.volume = 0.2;
+
+    return () => {
+      if (bgmRef.current) {
+        bgmRef.current.pause();
+        bgmRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!bgmRef.current) return;
+
+    if (isPlaying && !isPaused && !gameOver && !isMuted) {
+      bgmRef.current.play().catch(() => { }); // Catch jika diblokir browser
+    } else {
+      bgmRef.current.pause();
+    }
+  }, [isPlaying, isPaused, gameOver, isMuted]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const keysToBlock = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "];
+
+      if (e.key.toLowerCase() === "p") {
+        togglePause();
+        return;
+      }
+
+      if (isPaused) return;
 
       if (keysToBlock.includes(e.key)) {
         e.preventDefault();
@@ -60,6 +92,16 @@ export default function Home() {
   return (
     <main className={`flex flex-col items-center justify-start min-h-screen ${theme.bg} transition-colors duration-500 p-2 md:p-4`}>
 
+      {/* Tombol Mute di samping Theme Switcher */}
+      <div className="absolute top-4 left-4 flex gap-2">
+        <button
+          onClick={() => setIsMuted(!isMuted)}
+          className="bg-black/30 p-2 rounded-xl border border-white/10 text-white text-[10px]"
+        >
+          {isMuted ? "🔇 MUTED" : "🔊 BGM ON"}
+        </button>
+      </div>
+
       {/* TEMA SWITCHER - Pojok Kanan Atas yang Rapi */}
       <div className="w-full max-w-[800px] flex justify-end mb-1">
         <div className="flex bg-black/30 backdrop-blur-xl p-1 rounded-xl border border-white/10">
@@ -83,7 +125,7 @@ export default function Home() {
       </header>
 
       {/* GAME AREA - Menggunakan Grid 3 Kolom untuk Menjaga Board di Tengah */}
-      <div className="flex flex-col lg:grid lg:grid-cols-[1fr_320px_1fr] gap-2 lg:gap-12 items-center justify-center w-full max-w-7xl">
+      <div className="flex flex-col lg:grid lg:grid-cols-[1fr_320px_1fr] gap-2 lg:gap-12 items-center lg:items-start justify-center w-full max-w-7xl">
 
         {/* KOLOM KIRI: Sidebar Info */}
         <aside className="flex flex-row lg:flex-col gap-2 w-full lg:w-[220px] justify-center order-2 lg:order-1 px-2">
@@ -122,6 +164,16 @@ export default function Home() {
           <button onClick={startGame} className="hidden lg:block w-full py-4 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-black text-sm uppercase tracking-widest transition-all active:scale-95 shadow-xl">
             {gameOver ? "Retry" : isPlaying ? "Restart" : "Play"}
           </button>
+
+          {isPlaying && !gameOver && (
+            <button
+              onClick={togglePause}
+              className={`w-full py-2 rounded-xl font-black text-[10px] uppercase transition-all ${isPaused ? "bg-green-500" : "bg-yellow-500"
+                }`}
+            >
+              {isPaused ? "Resume" : "Pause"}
+            </button>
+          )}
         </aside>
 
         {/* KOLOM TENGAH: Board Utama */}
@@ -164,6 +216,21 @@ export default function Home() {
             })
           )}
 
+          {/* Overlay Paused */}
+          {isPaused && !gameOver && (
+            <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/60 backdrop-blur-md transition-all">
+              <div className="bg-white/10 p-6 rounded-3xl border border-white/20 text-center scale-110">
+                <h2 className="text-3xl font-black text-white italic mb-4 tracking-tighter">PAUSED</h2>
+                <button
+                  onClick={togglePause}
+                  className="px-6 py-2 bg-white text-black font-bold rounded-full hover:bg-blue-400 transition-colors"
+                >
+                  RESUME
+                </button>
+              </div>
+            </div>
+          )}
+          
           {/* Overlay Game Over */}
           {gameOver && (
             <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm">
@@ -173,6 +240,7 @@ export default function Home() {
               </button>
             </div>
           )}
+
         </section>
 
         {/* VIRTUAL CONTROLLER - Hanya muncul di Mobile (lg:hidden) */}
@@ -186,6 +254,9 @@ export default function Home() {
           <button onPointerDown={() => move(1, 0)} className="h-10 rounded-xl bg-white/10 flex items-center justify-center text-lg active:bg-white/30">→</button>
 
           <button onPointerDown={hardDrop} className="col-span-2 h-10 rounded-xl bg-blue-600/50 flex items-center justify-center font-black text-[9px] tracking-widest active:bg-blue-500 uppercase">Hard Drop</button>
+          <button onClick={togglePause} className="col-span-1 h-10 rounded-xl bg-yellow-600/50 flex items-center justify-center font-black text-[9px] uppercase">
+             {isPaused ? "Resume" : "Pause"}
+           </button>
           <button onClick={startGame} className="h-10 rounded-xl bg-slate-700 font-black text-[9px] uppercase">
             {isPlaying ? "Restart" : "Play"}
           </button>

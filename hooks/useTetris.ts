@@ -4,6 +4,17 @@ import { COLS, ROWS, getRandomTetromino, TETROMINOS } from "@/constants";
 export const useTetris = () => {
     const [grid, setGrid] = useState<string[][]>(Array.from({ length: ROWS }, () => Array(COLS).fill("0")));
     const [activePiece, setActivePiece] = useState({ pos: { x: 3, y: 0 }, ...getRandomTetromino() });
+    const [isPaused, setIsPaused] = useState(false);
+    const [gameOver, setGameOver] = useState(false);
+    const [score, setScore] = useState(0);
+    const [isPlaying, setIsPlaying] = useState(false);
+
+
+    const togglePause = useCallback(() => {
+        if (!gameOver && isPlaying) {
+            setIsPaused((prev) => !prev);
+        }
+    }, [gameOver, isPlaying]);
 
     // Fitur: Next Piece Queue
     const [nextPiece, setNextPiece] = useState(getRandomTetromino());
@@ -15,9 +26,6 @@ export const useTetris = () => {
         audio.play().catch(() => { }); // Catch error jika autoplay diblokir browser
     };
 
-    const [gameOver, setGameOver] = useState(false);
-    const [score, setScore] = useState(0);
-    const [isPlaying, setIsPlaying] = useState(false);
 
     const startGame = useCallback(() => {
         setGrid(Array.from({ length: ROWS }, () => Array(COLS).fill("0")));
@@ -124,10 +132,10 @@ export const useTetris = () => {
     };
 
     useEffect(() => {
-        if (!isPlaying || gameOver) return;
+        if (!isPlaying || gameOver || isPaused) return;
         const interval = setInterval(() => move(0, 1), 800);
         return () => clearInterval(interval);
-    }, [move, isPlaying, gameOver]);
+    }, [move, isPlaying, gameOver, isPaused]);
 
-    return { grid, activePiece, nextPiece, move, rotate, hardDrop, gameOver, score, startGame, isPlaying, getGhostPos };
+    return { grid, activePiece, nextPiece, move, rotate, hardDrop, gameOver, score, startGame, isPlaying, getGhostPos, isPaused, togglePause, setIsPaused };
 };
