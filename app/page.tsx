@@ -164,16 +164,6 @@ export default function Home() {
           <button onClick={startGame} className="hidden lg:block w-full py-4 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-black text-sm uppercase tracking-widest transition-all active:scale-95 shadow-xl">
             {gameOver ? "Retry" : isPlaying ? "Restart" : "Play"}
           </button>
-
-          {isPlaying && !gameOver && (
-            <button
-              onClick={togglePause}
-              className={`w-full py-2 rounded-xl font-black text-[10px] uppercase transition-all ${isPaused ? "bg-green-500" : "bg-yellow-500"
-                }`}
-            >
-              {isPaused ? "Resume" : "Pause"}
-            </button>
-          )}
         </aside>
 
         {/* KOLOM TENGAH: Board Utama */}
@@ -230,7 +220,7 @@ export default function Home() {
               </div>
             </div>
           )}
-          
+
           {/* Overlay Game Over */}
           {gameOver && (
             <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm">
@@ -253,13 +243,21 @@ export default function Home() {
           <button onPointerDown={() => move(0, 1)} className="h-10 rounded-xl bg-white/10 flex items-center justify-center text-lg active:bg-white/30">↓</button>
           <button onPointerDown={() => move(1, 0)} className="h-10 rounded-xl bg-white/10 flex items-center justify-center text-lg active:bg-white/30">→</button>
 
-          <button onPointerDown={hardDrop} className="col-span-2 h-10 rounded-xl bg-blue-600/50 flex items-center justify-center font-black text-[9px] tracking-widest active:bg-blue-500 uppercase">Hard Drop</button>
-          <button onClick={togglePause} className="col-span-1 h-10 rounded-xl bg-yellow-600/50 flex items-center justify-center font-black text-[9px] uppercase">
-             {isPaused ? "Resume" : "Pause"}
-           </button>
-          <button onClick={startGame} className="h-10 rounded-xl bg-slate-700 font-black text-[9px] uppercase">
-            {isPlaying ? "Restart" : "Play"}
-          </button>
+          <button onPointerDown={hardDrop} className="col-span-3 h-10 rounded-xl bg-blue-600/50 flex items-center justify-center font-black text-[9px] tracking-widest active:bg-blue-500 uppercase">Hard Drop</button>
+          <div className="col-span-3 grid grid-cols-2 gap-1.5">
+            <button
+              onClick={togglePause}
+              className="h-10 rounded-xl bg-yellow-600/50 flex items-center justify-center font-black text-[9px] uppercase active:bg-yellow-500"
+            >
+              {isPaused ? "Resume" : "Pause"}
+            </button>
+            <button
+              onClick={startGame}
+              className="h-10 rounded-xl bg-slate-700 flex items-center justify-center font-black text-[9px] uppercase active:bg-slate-600"
+            >
+              {isPlaying ? "Restart" : "Play"}
+            </button>
+          </div>
         </div>
 
         <div className="hidden lg:block order-3 w-[220px]" />
@@ -267,7 +265,6 @@ export default function Home() {
         {/* KOLOM KANAN: Elemen Penyeimbang (Kosong agar Board tetap di tengah) */}
         <div className="hidden lg:block order-3 w-[220px]" />
       </div>
-
     </main>
   );
 }
